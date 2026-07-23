@@ -9,7 +9,7 @@ async function bootstrap() {
 
   app.use(helmet());
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env.CORS_ORIGIN || 'http://localhost:7777',
     credentials: true,
   });
 
@@ -40,7 +40,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.PORT || 4000;
+  const port = process.env.PORT || 7755;
   await app.listen(port);
   console.log(`TreasureNet server running on port ${port}`);
 }

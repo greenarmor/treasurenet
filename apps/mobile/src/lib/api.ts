@@ -1,4 +1,4 @@
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:7755';
 
 let authToken: string | null = null;
 

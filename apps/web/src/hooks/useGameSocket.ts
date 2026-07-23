@@ -7,7 +7,7 @@ export function useGameSocket() {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    const socket = io(`${process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:4000'}/game`, {
+    const socket = io(`${process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:7755'}/game`, {
       transports: ['websocket'],
     });
 

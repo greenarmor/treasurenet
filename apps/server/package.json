@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "rm -f tsconfig.build.tsbuildinfo && tsc -p tsconfig.build.json && node dist/main.js",
-    "dev:kill": "lsof -ti:4000 | xargs kill -9 2>/dev/null; echo 'port 4000 cleared'",
+    "dev:kill": "lsof -ti:7755 | xargs kill -9 2>/dev/null; echo 'port 7755 cleared'",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/main",
     "start:prod": "node dist/main",
