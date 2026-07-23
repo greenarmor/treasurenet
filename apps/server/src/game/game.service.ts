@@ -48,6 +48,7 @@ export class GameService {
 
     const hunt = await this.prisma.treasureHunt.create({
       data: {
+        orgId: 'default',
         ownerWalletId: walletId,
         escrowContractId,
         title: dto.title,

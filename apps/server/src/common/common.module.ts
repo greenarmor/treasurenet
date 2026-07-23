@@ -1,11 +1,13 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { StellarService } from './stellar.service';
+import { TenantMiddleware } from './tenant.middleware';
 import { PrismaClient } from '@prisma/client';
 
 @Global()
 @Module({
   providers: [
     StellarService,
+    TenantMiddleware,
     {
       provide: PrismaClient,
       useFactory: () => {
@@ -16,6 +18,10 @@ import { PrismaClient } from '@prisma/client';
       },
     },
   ],
-  exports: [StellarService, PrismaClient],
+  exports: [StellarService, TenantMiddleware, PrismaClient],
 })
-export class CommonModule {}
+export class CommonModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(TenantMiddleware).forRoutes('*');
+  }
+}

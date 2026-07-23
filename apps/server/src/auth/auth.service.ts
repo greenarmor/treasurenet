@@ -45,6 +45,7 @@ export class AuthService {
           roles: isMobile ? ['PLAYER'] : ['PLAYER'],
           walletType: isMobile ? 'MOBILE' : 'FREIGHTER',
           isPrimary: true,
+          orgId: null,
         },
       });
 
@@ -53,7 +54,14 @@ export class AuthService {
       });
     }
 
-    const payload = { sub: wallet.id, address: wallet.address, roles: wallet.roles };
+    // Get org from header if present (mobile apps can pass org slug)
+    // For now, wallets created without org context
+    const payload = {
+      sub: wallet.id,
+      address: wallet.address,
+      roles: wallet.roles,
+      orgId: wallet.orgId,
+    };
     const token = this.jwtService.sign(payload);
     const refreshToken = uuid();
 

@@ -59,6 +59,7 @@ export class SchedulerService {
       await this.prisma.leaderboard.upsert({
         where: { walletId: players[i].walletId },
         create: {
+          orgId: 'default',
           walletId: players[i].walletId,
           score: players[i].leaderboardScore,
           rank: i + 1,
