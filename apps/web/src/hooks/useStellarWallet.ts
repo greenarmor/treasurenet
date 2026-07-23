@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import freighterApi from '@stellar/freighter-api';
 
 interface WalletState {
   publicKey: string | null;
@@ -26,46 +27,38 @@ export function useStellarWallet() {
   const [txResult, setTxResult] = useState<TransactionResult | null>(null);
   const [sending, setSending] = useState(false);
 
-  const isFreighterAvailable = useCallback((): boolean => {
-    if (typeof window === 'undefined') return false;
-    // Check both possible injection points
-    const provider = (window as any).stellar || (window as any).freighter;
-    return !!provider && typeof provider.isConnected === 'function';
-  }, []);
-
   const connect = useCallback(async () => {
     setWallet((prev) => ({ ...prev, connecting: true }));
     try {
-      // Wait a tick for extension to inject
-      await new Promise((r) => setTimeout(r, 200));
-      const provider = (window as any).stellar || (window as any).freighter;
-      if (!provider || typeof provider.isConnected !== 'function') {
-        const hasStellar = !!(window as any).stellar;
-        const hasFreighter = !!(window as any).freighter;
-        alert(
-          'Freighter wallet not detected.\n\n' +
-          `window.stellar: ${hasStellar}\n` +
-          `window.freighter: ${hasFreighter}\n\n` +
-          'Troubleshooting:\n' +
-          '1. Open the Freighter extension - is it set up?\n' +
-          '2. Click the Freighter icon and unlock it\n' +
-          '3. Make sure it\'s on Testnet network\n' +
-          '4. Refresh this page\n\n' +
-          'Get it at: https://freighter.app',
-        );
+      // Check if Freighter is connected
+      const { isConnected: connected } = await freighterApi.isConnected();
+      if (!connected) {
+        // Request access
+        const { error: accessError } = await freighterApi.requestAccess();
+        if (accessError) {
+          alert(
+            'Freighter wallet not detected.\n\n' +
+            'Make sure:\n' +
+            '1. Freighter extension is installed\n' +
+            '2. Open Freighter, create or import a wallet\n' +
+            '3. Set network to Testnet\n' +
+            '4. Refresh this page\n\n' +
+            'Get it at: https://freighter.app',
+          );
+          setWallet((prev) => ({ ...prev, connecting: false }));
+          return;
+        }
+      }
+
+      const { address, error } = await freighterApi.getAddress();
+      if (error || !address) {
+        alert('Could not get public key from Freighter. Is your wallet set up?');
         setWallet((prev) => ({ ...prev, connecting: false }));
         return;
       }
 
-      const isConnected = await provider.isConnected();
-      if (!isConnected) {
-        await provider.requestAccess();
-      }
-
-      const publicKey = await provider.getPublicKey();
-      setWallet({ publicKey, connected: true, connecting: false });
-
-      await fetchBalance(publicKey);
+      setWallet({ publicKey: address, connected: true, connecting: false });
+      await fetchBalance(address);
     } catch (err: any) {
       console.error('Wallet connection failed:', err);
       setWallet({ publicKey: null, connected: false, connecting: false });
@@ -108,8 +101,7 @@ export function useStellarWallet() {
     setTxResult(null);
 
     try {
-      const provider = (window as any).stellar;
-      if (!provider || !wallet.publicKey) {
+      if (!wallet.publicKey) {
         throw new Error('Wallet not connected');
       }
 
@@ -131,34 +123,38 @@ export function useStellarWallet() {
         .setTimeout(180)
         .build();
 
-      const signedXdr = await provider.signTransaction(transaction.toXDR(), {
-        network: 'TESTNET',
-        publicKey: wallet.publicKey,
-      });
+      const { signedTxXdr, error: signError } = await freighterApi.signTransaction(
+        transaction.toXDR(),
+        { networkPassphrase: StellarSdk.Networks.TESTNET, address: wallet.publicKey },
+      );
+
+      if (signError || !signedTxXdr) {
+        throw new Error(signError?.message || 'Transaction signing failed');
+      }
 
       const signedTransaction = StellarSdk.TransactionBuilder.fromXDR(
-        signedXdr,
+        signedTxXdr,
         StellarSdk.Networks.TESTNET,
       );
 
       const result = await server.submitTransaction(signedTransaction);
 
-      const txResult: TransactionResult = {
+      const txResultData: TransactionResult = {
         hash: result.hash,
         success: result.successful,
         explorerUrl: `https://stellar.expert/explorer/testnet/tx/${result.hash}`,
       };
 
-      setTxResult(txResult);
+      setTxResult(txResultData);
       await fetchBalance(wallet.publicKey);
 
-      return txResult;
+      return txResultData;
     } catch (err: any) {
       const errorMsg = err?.response?.data?.extras?.result_codes?.transaction ||
         err?.response?.data?.extras?.result_codes?.operations?.join(', ') ||
         err?.message || 'Transaction failed';
 
-      const txResult: TransactionResult = {
+      const txResultData: TransactionResult = {
         hash: err?.response?.data?.hash || '',
         success: false,
         error: errorMsg,
@@ -167,8 +163,8 @@ export function useStellarWallet() {
           : undefined,
       };
 
-      setTxResult(txResult);
-      return txResult;
+      setTxResult(txResultData);
+      return txResultData;
     } finally {
       setSending(false);
     }
@@ -184,6 +180,5 @@ export function useStellarWallet() {
     disconnect,
     fetchBalance,
     sendTestTransaction,
-    isFreighterAvailable,
   };
 }
