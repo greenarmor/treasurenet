@@ -9,28 +9,41 @@ class PromoteToGameMasterDto {
   @IsString() adminKey!: string;
 }
 
-@ApiTags('Players')
-@ApiBearerAuth()
-@UseGuards(WalletAuthGuard)
+class IssueSbtDto {
+  @IsString() address!: string;
+  @IsString() adminKey!: string;
+}
+
+@ApiTags('Profile')
 @Controller('profile')
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}
 
   @Get()
+  @ApiBearerAuth()
+  @UseGuards(WalletAuthGuard)
   @ApiOperation({ summary: 'Get player profile' })
   getProfile(@Req() req: any) {
     return this.walletService.getProfile(req.user.id);
   }
 
   @Patch('roles')
+  @ApiBearerAuth()
+  @UseGuards(WalletAuthGuard)
   @ApiOperation({ summary: 'Update wallet roles' })
   updateRoles(@Req() req: any, @Body('roles') roles: string[]) {
     return this.walletService.updateRoles(req.user.id, roles);
   }
 
   @Post('promote-gm')
-  @ApiOperation({ summary: 'Promote a wallet to Game Master role' })
+  @ApiOperation({ summary: 'Promote a wallet to Game Master (admin)' })
   promoteToGameMaster(@Body() dto: PromoteToGameMasterDto) {
     return this.walletService.promoteToGameMaster(dto.address, dto.adminKey);
+  }
+
+  @Post('issue-sbt')
+  @ApiOperation({ summary: 'Issue an SBT to a player (admin)' })
+  issueSbt(@Body() dto: IssueSbtDto) {
+    return this.walletService.issueSbt(dto.address, dto.adminKey);
   }
 }
