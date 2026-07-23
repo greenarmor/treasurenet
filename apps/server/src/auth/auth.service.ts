@@ -98,7 +98,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
-    const wallet = await this.prisma.wallet.findUnique({
+    const wallet = await this.prisma.wallet.findFirst({
       where: { userId: session.userId },
     });
     if (!wallet) throw new UnauthorizedException('Wallet not found');

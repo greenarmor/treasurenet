@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 
 export function LeaderboardScreen() {
-  const [players, setPlayers] = useState<any[]>([]);
+  const players: any[] = [];
 
   return (
     <View style={styles.container}>

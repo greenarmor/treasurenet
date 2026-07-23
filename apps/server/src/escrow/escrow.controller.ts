@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { WalletAuthGuard } from '../auth/wallet-auth.guard';
 import { EscrowService } from './escrow.service';

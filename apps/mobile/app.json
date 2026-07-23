@@ -7,6 +7,7 @@
     "icon": "./src/assets/icon.png",
     "scheme": "treasurenet",
     "userInterfaceStyle": "dark",
+    "platforms": ["ios", "android"],
     "splash": {
       "backgroundColor": "#0F172A"
     },

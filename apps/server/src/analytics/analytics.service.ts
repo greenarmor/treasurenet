@@ -18,7 +18,7 @@ export class AnalyticsService {
       this.prisma.playerProgress.count(),
       this.prisma.treasureHunt.aggregate({
         where: { status: 'COMPLETED' },
-        _sum: { reward: true },
+        _count: { id: true },
       }),
       this.prisma.treasureHunt.findMany({
         where: { status: 'COMPLETED' },
@@ -38,7 +38,7 @@ export class AnalyticsService {
       totalHunts,
       activeHunts,
       totalPlayers,
-      totalRewardsDistributed: totalRewards._sum.reward || 0,
+      totalRewardsDistributed: totalRewards._count.id || 0,
       recentClaims,
     };
   }

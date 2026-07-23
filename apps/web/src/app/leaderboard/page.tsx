@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-export default function LeaderboardPage() {
+export default function LeaderboardPage(): React.JSX.Element {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
 
   useEffect(() => {

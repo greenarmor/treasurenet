@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useStellarWallet } from '@/hooks/useStellarWallet';
 
-export default function WalletPage() {
+export default function WalletPage(): React.JSX.Element {
   const {
     publicKey,
     connected,

@@ -8,7 +8,7 @@ interface TreasureMapProps {
   userLocation: { lat: number; lng: number } | null;
 }
 
-export default function TreasureMap({ userLocation }: TreasureMapProps) {
+export default function TreasureMap({ userLocation }: TreasureMapProps): React.JSX.Element {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const userMarker = useRef<maplibregl.Marker | null>(null);

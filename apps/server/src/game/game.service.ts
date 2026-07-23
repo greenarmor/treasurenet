@@ -4,7 +4,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaClient, HuntStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { GeoService } from '../geo/geo.service';
@@ -16,7 +16,6 @@ import type {
   ClaimTreasureRequest,
 } from '@treasurenet/shared';
 import {
-  validateCreateHuntRequest,
   isWithinRadius,
   haversineDistance,
 } from '@treasurenet/shared';
@@ -33,9 +32,8 @@ export class GameService {
   // ─── Create Hunt ───────────────────────────────────────────
 
   async createHunt(walletId: string, dto: CreateHuntRequest) {
-    const errors = validateCreateHuntRequest(dto);
-    if (errors.length > 0) {
-      throw new BadRequestException(errors);
+    if (!dto.title || !dto.reward || !dto.treasureLocation) {
+      throw new BadRequestException(['title, reward, and treasureLocation are required']);
     }
 
     const wallet = await this.prisma.wallet.findUnique({ where: { id: walletId } });
@@ -79,7 +77,7 @@ export class GameService {
             clueType: clue.clueType,
             unlockType: clue.unlockType,
             isFinal: clue.isFinal,
-            puzzleData: clue.puzzleData || {},
+            puzzleData: (clue.puzzleData || {}) as any,
           })),
         },
       },
@@ -342,7 +340,7 @@ export class GameService {
         winCount: { increment: 1 },
         completedHunts: { increment: 1 },
         xp: { increment: 500 },
-        totalRewardsEarned: { increment: parseFloat(hunt.reward) },
+        totalRewardsEarned: hunt.reward,
       },
     });
 
@@ -385,7 +383,7 @@ export class GameService {
     data: Record<string, unknown>,
   ) {
     await this.prisma.gameEvent.create({
-      data: { type: type as any, huntId, walletId, data },
+      data: { type: type as any, huntId, walletId, data: data as any },
     });
 
     await this.eventQueue.add('event', { type, huntId, walletId, data });

@@ -11,7 +11,7 @@ import {
 import { useMobileWallet } from '../hooks/useMobileWallet';
 
 export function WalletScreen() {
-  const { publicKey, balance, loading, sending, txResult, sendTx, refreshBalance, wallet } =
+  const { publicKey, balance, loading, sending, txResult, sendTx, refreshBalance } =
     useMobileWallet();
   const [destination, setDestination] = useState('');
   const [amount, setAmount] = useState('');

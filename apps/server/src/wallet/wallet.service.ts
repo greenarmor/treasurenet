@@ -40,7 +40,7 @@ export class WalletService {
   async updateRoles(walletId: string, roles: string[]) {
     return this.prisma.wallet.update({
       where: { id: walletId },
-      data: { roles },
+      data: { roles: roles as any },
     });
   }
 }

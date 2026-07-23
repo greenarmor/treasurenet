@@ -13,7 +13,7 @@ const TreasureMap = dynamic(() => import('@/components/map/TreasureMap'), {
   ),
 });
 
-export default function HomePage() {
+export default function HomePage(): React.JSX.Element {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {

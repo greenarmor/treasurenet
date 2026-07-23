@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function HuntDetailPage() {
+export default function HuntDetailPage(): React.JSX.Element {
   const { id } = useParams<{ id: string }>();
   const [hunt, setHunt] = useState<any>(null);
   const [loading, setLoading] = useState(true);

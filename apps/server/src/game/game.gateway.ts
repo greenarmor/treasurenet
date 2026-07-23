@@ -13,7 +13,7 @@ import { Server, Socket } from 'socket.io';
 })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private playerLocations = new Map<string, { lat: number; lng: number }>();
 

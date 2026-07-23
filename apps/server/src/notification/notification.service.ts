@@ -35,7 +35,7 @@ export class NotificationService {
 
   async sendNotification(walletId: string, title: string, body: string, data?: Record<string, unknown>) {
     return this.prisma.notification.create({
-      data: { walletId, title, body, data: data || {} },
+      data: { walletId, title, body, data: (data || {}) as any },
     });
   }
 

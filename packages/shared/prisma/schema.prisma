@@ -186,6 +186,30 @@ model TreasureHunt {
   @@map("treasure_hunts")
 }
 
+// ─── Escrow Contracts ────────────────────────────────────────
+
+enum EscrowStatus {
+  CREATED
+  FUNDED
+  ACTIVE
+  CLAIMED
+  REFUNDED
+}
+
+model EscrowContract {
+  id              String       @id @default(uuid())
+  contractAddress String       @unique
+  reward          String
+  rewardToken     RewardToken  @default(XLM)
+  status          EscrowStatus @default(CREATED)
+  fundedAt        DateTime?
+  claimedAt       DateTime?
+  refundedAt      DateTime?
+  createdAt       DateTime     @default(now())
+
+  @@map("escrow_contracts")
+}
+
 // ─── Clues ───────────────────────────────────────────────────
 
 model Clue {

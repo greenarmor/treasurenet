@@ -28,7 +28,7 @@ export class EscrowService {
     });
   }
 
-  async claimReward(escrowId: string, walletId: string) {
+  async claimReward(escrowId: string, _walletId: string) {
     const escrow = await this.prisma.escrowContract.findUnique({
       where: { id: escrowId },
     });

@@ -24,12 +24,12 @@ export class SchedulerService {
     for (const hunt of expiredHunts) {
       await this.prisma.treasureHunt.update({
         where: { id: hunt.id },
-        data: { status: 'EXPIRED' },
+        data: { status: 'EXPIRED' as any },
       });
 
       await this.prisma.escrowContract.update({
         where: { id: hunt.escrowContractId },
-        data: { status: 'EXPIRED' },
+        data: { status: 'EXPIRED' as any },
       });
 
       this.logger.log(`Hunt ${hunt.id} expired`);

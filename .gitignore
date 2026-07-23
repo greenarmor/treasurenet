@@ -6,6 +6,8 @@ node_modules/
 dist/
 target/
 *.tsbuildinfo
+.turbo/
+next-env.d.ts
 .expo/
 
 # Environment (local only)

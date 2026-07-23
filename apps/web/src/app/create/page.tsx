@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-export default function CreateHuntPage() {
+export default function CreateHuntPage(): React.JSX.Element {
   const [form, setForm] = useState({
     title: '',
     description: '',

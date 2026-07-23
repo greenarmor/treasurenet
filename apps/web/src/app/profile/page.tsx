@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-export default function ProfilePage() {
+export default function ProfilePage(): React.JSX.Element {
   const [profile, setProfile] = useState<any>(null);
   const [isConnected, setIsConnected] = useState(false);
 

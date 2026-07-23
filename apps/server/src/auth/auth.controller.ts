@@ -1,21 +1,21 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { IsString, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
 
 class WalletAuthDto {
-  @IsString() @IsNotEmpty() address: string;
-  @IsString() @IsNotEmpty() signature: string;
-  @IsString() @IsNotEmpty() message: string;
+  @IsString() @IsNotEmpty() address!: string;
+  @IsString() @IsNotEmpty() signature!: string;
+  @IsString() @IsNotEmpty() message!: string;
   @IsOptional() @IsEnum(['FREIGHTER', 'MOBILE']) walletType?: string;
 }
 
 class GetNonceDto {
-  @IsString() @IsNotEmpty() address: string;
+  @IsString() @IsNotEmpty() address!: string;
 }
 
 class RefreshTokenDto {
-  @IsString() @IsNotEmpty() refreshToken: string;
+  @IsString() @IsNotEmpty() refreshToken!: string;
 }
 
 @ApiTags('Auth')

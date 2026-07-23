@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import * as Location from 'expo-location';
-import { haversineDistance } from '@treasurenet/shared';
 
 export function MapScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
