@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Body, Param, UseGuards, Req,
-  BadRequestException, NotFoundException,
+  BadRequestException, NotFoundException, Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { WalletAuthGuard } from '../auth/wallet-auth.guard';
@@ -17,10 +17,20 @@ class InviteMemberDto {
   @IsString() address!: string;
 }
 
+class VerifyXlmPaymentDto {
+  @IsString() txHash!: string;
+  @IsString() tierType!: string;
+}
+
 @ApiTags('Organizations')
 @Controller('orgs')
 export class OrganizationController {
+  private readonly logger = new Logger(OrganizationController.name);
+
   constructor(private readonly prisma: PrismaClient) {}
+
+  // Platform wallet address for XLM payments
+  private readonly PLATFORM_WALLET = process.env.PLATFORM_WALLET_ADDRESS || '';
 
   @Post()
   @ApiBearerAuth()
@@ -171,5 +181,116 @@ export class OrganizationController {
       address: m.user.wallets[0]?.address,
       joinedAt: m.joinedAt,
     }));
+  }
+
+  @Post(':slug/verify-payment')
+  @ApiBearerAuth()
+  @UseGuards(WalletAuthGuard)
+  @ApiOperation({ summary: 'Verify XLM payment for subscription upgrade' })
+  async verifyPayment(@Req() req: any, @Param('slug') slug: string, @Body() dto: VerifyXlmPaymentDto) {
+    const wallet = await this.prisma.wallet.findUnique({ where: { id: req.user.id } });
+    if (!wallet) throw new NotFoundException('Wallet not found');
+
+    const org = await this.prisma.organization.findUnique({ where: { slug } });
+    if (!org) throw new NotFoundException('Organization not found');
+
+    const tier = await this.prisma.subscriptionTier.findUnique({
+      where: { type: dto.tierType as any },
+    });
+    if (!tier) throw new BadRequestException('Invalid tier');
+
+    // Verify payment via Horizon
+    const horizonUrl = process.env.STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org';
+    let txData: any;
+
+    try {
+      const res = await fetch(`${horizonUrl}/transactions/${dto.txHash}`);
+      if (!res.ok) throw new Error('Transaction not found');
+      txData = await res.json();
+    } catch {
+      throw new BadRequestException('Failed to verify transaction on Stellar network');
+    }
+
+    // Validate payment
+    const expectedXlm = tier.priceMonthly / 100;
+    const paymentOp = txData.operations?.records?.find(
+      (op: any) =>
+        op.type === 'payment' &&
+        op.to === this.PLATFORM_WALLET &&
+        op.asset_type === 'native',
+    );
+
+    if (!paymentOp) {
+      throw new BadRequestException(
+        `No XLM payment found to platform wallet ${this.PLATFORM_WALLET}`,
+      );
+    }
+
+    const paidAmount = parseFloat(paymentOp.amount);
+    if (paidAmount < expectedXlm) {
+      throw new BadRequestException(
+        `Insufficient payment: sent ${paidAmount} XLM, need ${expectedXlm} XLM`,
+      );
+    }
+
+    // Update subscription
+    const subscription = await this.prisma.subscription.findFirst({
+      where: { orgId: org.id, status: { in: ['TRIAL', 'ACTIVE', 'PAST_DUE'] } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!subscription) throw new NotFoundException('No active subscription found');
+
+    const now = new Date();
+    const periodEnd = new Date(now);
+    periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+    await this.prisma.subscription.update({
+      where: { id: subscription.id },
+      data: {
+        tierId: tier.id,
+        status: 'ACTIVE',
+        xlmAmount: `${expectedXlm}`,
+        paymentTxHash: dto.txHash,
+        paidAt: now,
+        currentPeriodStart: now,
+        currentPeriodEnd: periodEnd,
+      },
+    });
+
+    this.logger.log(`Subscription upgraded for org ${slug} to ${dto.tierType}, paid ${expectedXlm} XLM`);
+
+    return {
+      success: true,
+      tier: dto.tierType,
+      paidXlm: expectedXlm,
+      nextPeriodEnd: periodEnd,
+      txHash: dto.txHash,
+    };
+  }
+
+  @Get(':slug/subscription')
+  @ApiOperation({ summary: 'Get organization subscription status' })
+  async getSubscription(@Param('slug') slug: string) {
+    const org = await this.prisma.organization.findUnique({ where: { slug } });
+    if (!org) throw new NotFoundException('Organization not found');
+
+    const subscription = await this.prisma.subscription.findFirst({
+      where: { orgId: org.id },
+      orderBy: { createdAt: 'desc' },
+      include: { tier: true },
+    });
+
+    if (!subscription) throw new NotFoundException('No subscription found');
+
+    return {
+      status: subscription.status,
+      tier: subscription.tier.type,
+      tierName: subscription.tier.name,
+      xlmAmount: subscription.xlmAmount,
+      currentPeriodEnd: subscription.currentPeriodEnd,
+      trialEndsAt: subscription.trialEndsAt,
+      paymentTxHash: subscription.paymentTxHash,
+    };
   }
 }

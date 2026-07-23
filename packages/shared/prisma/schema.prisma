@@ -193,8 +193,9 @@ model Subscription {
   trialEndsAt     DateTime?
   currentPeriodStart DateTime
   currentPeriodEnd   DateTime
-  stripeSubscriptionId String?
-  stripeCustomerId String?
+  xlmAmount       String             @default("0")
+  paymentTxHash   String?
+  paidAt          DateTime?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
