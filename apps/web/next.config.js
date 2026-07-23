@@ -7,18 +7,21 @@ const nextConfig = {
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      // Force browser resolution for Stellar SDK
-      config.resolve.conditionNames = ['browser', 'import', 'module', 'require'];
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'sodium-native': false,
+      };
       config.resolve.fallback = {
         ...config.resolve.fallback,
-        'sodium-native': false,
-        'require-addon': false,
         fs: false,
         net: false,
         tls: false,
         dns: false,
         child_process: false,
       };
+      // Suppress critical dependency warnings from sodium-native in dev
+      config.module = config.module || {};
+      config.module.exprContextCritical = false;
     }
     return config;
   },
