@@ -100,7 +100,7 @@ export class OrganizationController {
       include: { org: true },
     });
 
-    return memberships.map((m) => ({
+    return memberships.map((m: any) => ({
       id: m.org.id,
       name: m.org.name,
       slug: m.org.slug,

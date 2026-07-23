@@ -80,7 +80,7 @@ export class GameService {
         imageUrls: dto.imageUrls || [],
         tags: dto.tags || [],
         clues: {
-          create: dto.clues.map((clue) => ({
+          create: dto.clues.map((clue: any) => ({
             sequence: clue.sequence,
             lat: clue.location.latitude,
             lng: clue.location.longitude,
@@ -402,7 +402,7 @@ export class GameService {
 
   /// GM dashboard with aggregate stats
   async getGMDashboard(walletId: string) {
-    const [hunts, activeHunts, completedHunts, totalRewards, totalPlayers] =
+    const [hunts, activeHunts, completedHunts, _totalRewards, totalPlayers] =
       await Promise.all([
         this.prisma.treasureHunt.count({ where: { ownerWalletId: walletId } }),
         this.prisma.treasureHunt.count({
@@ -427,7 +427,7 @@ export class GameService {
     });
 
     const contractsWithFunding = await Promise.all(
-      activeHuntsList.map(async (hunt) => {
+      activeHuntsList.map(async (hunt: any) => {
         const escrow = await this.prisma.escrowContract.findUnique({
           where: { id: hunt.escrowContractId },
           select: { contractAddress: true, status: true },
