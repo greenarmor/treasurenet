@@ -174,7 +174,7 @@ export class OrganizationController {
     });
 
     if (!org) throw new NotFoundException('Organization not found');
-    return org.members.map((m) => ({
+    return org.members.map((m: any) => ({
       userId: m.userId,
       username: m.user.username,
       role: m.role,
