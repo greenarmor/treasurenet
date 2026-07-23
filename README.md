@@ -6,34 +6,6 @@ TreasureNet is an AR-style geolocation game where players physically travel to r
 
 > **Stellar Community Fund Submission** - TreasureNet combines Stellar testnet transactions with real-world GPS gameplay, using Freighter wallet for authentication and on-chain payments.
 
-## 📸 Screenshots
-
-### Wallet Connected State
-<!-- Replace with actual screenshot -->
-![Wallet Connected](docs/screenshots/wallet-connected.png)
-
-*Freighter wallet connected, showing the user's Stellar public key with green connection indicator.*
-
-### Balance Displayed
-<!-- Replace with actual screenshot -->
-![Balance Display](docs/screenshots/balance.png)
-
-*Live testnet XLM balance fetched from Horizon API and displayed in the wallet.*
-
-### Successful Testnet Transaction
-<!-- Replace with actual screenshot -->
-![Transaction Success](docs/screenshots/transaction-success.png)
-
-*Transaction submitted successfully on Stellar Testnet with hash and explorer link.*
-
-### Transaction Result
-<!-- Replace with actual screenshot -->
-![Transaction Result](docs/screenshots/transaction-result.png)
-
-*Transaction hash, status, and link to Stellar Expert explorer shown to the user after submission.*
-
----
-
 ## 🚀 Setup Instructions (Run Locally)
 
 ### Prerequisites
