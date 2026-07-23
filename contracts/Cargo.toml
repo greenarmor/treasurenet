@@ -9,10 +9,10 @@ members = [
 [workspace.package]
 version = "1.0.0"
 edition = "2021"
-rust-version = "1.75"
+rust-version = "1.82"
 
 [workspace.dependencies]
-soroban-sdk = "22.0.11"
+soroban-sdk = "27.0.2"
 
 [profile.release]
 opt-level = "z"
