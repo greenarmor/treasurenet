@@ -74,7 +74,7 @@ export class AnalyticsService {
 
     return {
       dailyActiveUsers: dailyActive.length,
-      topPlayers: topPlayers.map((p) => ({
+      topPlayers: topPlayers.map((p: any) => ({
         address: p.wallet.address,
         xp: p.xp,
         level: p.level,

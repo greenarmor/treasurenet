@@ -19,7 +19,7 @@ export class LeaderboardService {
     const total = await this.prisma.playerProgress.count();
 
     return {
-      data: players.map((p, i) => ({
+      data: players.map((p: any, i: number) => ({
         rank: (page - 1) * pageSize + i + 1,
         address: p.wallet.address,
         xp: p.xp,

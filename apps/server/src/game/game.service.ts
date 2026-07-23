@@ -105,7 +105,7 @@ export class GameService {
       },
     });
 
-    const nearby = hunts.filter((hunt) => {
+    const nearby = hunts.filter((hunt: any) => {
       const distance = haversineDistance(
         { latitude, longitude },
         { latitude: hunt.treasureLat, longitude: hunt.treasureLng },
@@ -113,7 +113,7 @@ export class GameService {
       return distance <= radiusKm * 1000;
     });
 
-    return nearby.map((hunt) => ({
+    return nearby.map((hunt: any) => ({
       ...this.formatHunt(hunt),
       distance: haversineDistance(
         { latitude, longitude },
