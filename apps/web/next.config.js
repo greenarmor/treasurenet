@@ -5,23 +5,22 @@ const nextConfig = {
   images: {
     domains: ['ipfs.io', 'gateway.pinata.cloud'],
   },
+  serverExternalPackages: ['sodium-native'],
   webpack: (config, { isServer }) => {
     if (!isServer) {
+      // Completely replace sodium-native with an empty stub for browser
       config.resolve.alias = {
         ...config.resolve.alias,
-        'sodium-native': false,
+        'sodium-native': require.resolve('./src/lib/sodium-stub'),
+        'require-addon': false,
       };
       config.resolve.fallback = {
-        ...config.resolve.fallback,
         fs: false,
         net: false,
         tls: false,
         dns: false,
         child_process: false,
       };
-      // Suppress critical dependency warnings from sodium-native in dev
-      config.module = config.module || {};
-      config.module.exprContextCritical = false;
     }
     return config;
   },
