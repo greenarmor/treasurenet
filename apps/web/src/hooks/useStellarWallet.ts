@@ -30,29 +30,33 @@ export function useStellarWallet() {
   const connect = useCallback(async () => {
     setWallet((prev) => ({ ...prev, connecting: true }));
     try {
-      // Check if Freighter is connected
-      const { isConnected: connected } = await freighterApi.isConnected();
-      if (!connected) {
-        // Request access
-        const { error: accessError } = await freighterApi.requestAccess();
-        if (accessError) {
+      // Step 1: Check if Freighter is already connected
+      const { isConnected: alreadyConnected } = await freighterApi.isConnected();
+
+      if (!alreadyConnected) {
+        // Step 2: Request the user to connect via Freighter popup
+        const { error: reqError } = await freighterApi.requestAccess();
+        if (reqError) {
           alert(
-            'Freighter wallet not detected.\n\n' +
-            'Make sure:\n' +
-            '1. Freighter extension is installed\n' +
-            '2. Open Freighter, create or import a wallet\n' +
-            '3. Set network to Testnet\n' +
-            '4. Refresh this page\n\n' +
-            'Get it at: https://freighter.app',
+            `Freighter connection failed: ${reqError.message || reqError}\n\n` +
+            'Please open the Freighter extension and try again.',
           );
           setWallet((prev) => ({ ...prev, connecting: false }));
           return;
         }
       }
 
-      const { address, error } = await freighterApi.getAddress();
-      if (error || !address) {
-        alert('Could not get public key from Freighter. Is your wallet set up?');
+      // Step 3: Get the wallet address
+      const { address, error: addrError } = await freighterApi.getAddress();
+
+      if (addrError || !address) {
+        alert(
+          `Could not get wallet address: ${addrError?.message || addrError || 'Unknown error'}\n\n` +
+          'Make sure:\n' +
+          '- Your Freighter wallet has at least one account\n' +
+          '- Freighter is set to Testnet network\n' +
+          '- The extension popup was not blocked',
+        );
         setWallet((prev) => ({ ...prev, connecting: false }));
         return;
       }
