@@ -27,15 +27,27 @@ export function useStellarWallet() {
   const [sending, setSending] = useState(false);
 
   const isFreighterAvailable = useCallback((): boolean => {
-    return typeof window !== 'undefined' && !!(window as any).stellar?.isConnected;
+    if (typeof window === 'undefined') return false;
+    // Check both possible injection points
+    const provider = (window as any).stellar || (window as any).freighter;
+    return !!provider && typeof provider.isConnected === 'function';
   }, []);
 
   const connect = useCallback(async () => {
     setWallet((prev) => ({ ...prev, connecting: true }));
     try {
-      const provider = (window as any).stellar;
-      if (!provider) {
-        alert('Please install Freighter wallet extension: https://freighter.app');
+      // Wait a tick for extension to inject
+      await new Promise((r) => setTimeout(r, 100));
+      const provider = (window as any).stellar || (window as any).freighter;
+      if (!provider || typeof provider.isConnected !== 'function') {
+        alert(
+          'Freighter wallet not detected. Make sure:\n' +
+          '1. Freighter extension is installed\n' +
+          '2. You\'ve completed the wallet setup in Freighter\n' +
+          '3. Refresh this page after installing\n\n' +
+          'Get it at: https://freighter.app',
+        );
+        setWallet((prev) => ({ ...prev, connecting: false }));
         return;
       }
 
