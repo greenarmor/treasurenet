@@ -51,11 +51,12 @@ export function useStellarWallet() {
 
       if (addrError || !address) {
         alert(
-          `Could not get wallet address: ${addrError?.message || addrError || 'Unknown error'}\n\n` +
-          'Make sure:\n' +
-          '- Your Freighter wallet has at least one account\n' +
-          '- Freighter is set to Testnet network\n' +
-          '- The extension popup was not blocked',
+          'Freighter is installed but no wallet account found.\n\n' +
+          'Open the Freighter extension and:\n' +
+          '1. Click "Create Wallet" or "Import Wallet"\n' +
+          '2. Save your recovery phrase\n' +
+          '3. Switch to Testnet network\n' +
+          '4. Come back and click Connect again',
         );
         setWallet((prev) => ({ ...prev, connecting: false }));
         return;
