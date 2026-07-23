@@ -1,9 +1,9 @@
 #![no_std]
 
-extern crate wee_alloc;
+extern crate linked_list_allocator;
 
 #[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+static ALLOC: linked_list_allocator::LockedHeap = linked_list_allocator::LockedHeap::empty();
 
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, symbol_short, token, Address, Env, Symbol,
