@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "nest start --watch",
+    "dev": "tsc -p tsconfig.build.json && node dist/main.js",
+    "dev:watch": "tsc -p tsconfig.build.json --watch & sleep 2 && node --watch dist/main.js",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/main",
     "start:prod": "node dist/main",
