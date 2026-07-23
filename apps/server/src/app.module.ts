@@ -11,14 +11,14 @@ import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { NotificationModule } from './notification/notification.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
-import { PrismaModule } from './common/prisma.module';
+import { CommonModule } from './common/common.module';
 import { RedisModule } from './common/redis.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
-    PrismaModule,
+    CommonModule,
     RedisModule,
     AuthModule,
     WalletModule,

@@ -5,8 +5,8 @@ import { WalletService } from './wallet.service';
 import { IsString } from 'class-validator';
 
 class PromoteToGameMasterDto {
-  @IsString() address: string;
-  @IsString() adminKey: string;
+  @IsString() address!: string;
+  @IsString() adminKey!: string;
 }
 
 @ApiTags('Players')

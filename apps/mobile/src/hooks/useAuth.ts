@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useMobileWallet } from './useMobileWallet';
-import { getNonce, login, refreshAuth, setToken, getToken } from '../lib/api';
+import { getNonce, login, setToken } from '../lib/api';
 
 export function useAuth() {
   const wallet = useMobileWallet();
@@ -28,20 +28,6 @@ export function useAuth() {
       setAuthLoading(false);
     }
   }, [wallet]);
-
-  const refresh = useCallback(async () => {
-    const token = getToken();
-    if (!token) return false;
-
-    try {
-      // Try to use existing token; if it fails, user must re-authenticate
-      setIsLoggedIn(true);
-      return true;
-    } catch {
-      setIsLoggedIn(false);
-      return false;
-    }
-  }, []);
 
   return {
     ...wallet,
