@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "TreasureNet",
+    "slug": "treasurenet",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/icon.png",
+    "scheme": "treasurenet",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0F172A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.treasurenet.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "TreasureNet needs your location to find nearby treasures and unlock clues.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "TreasureNet needs background location to track your treasure hunting progress.",
+        "NSCameraUsageDescription": "TreasureNet uses the camera to scan QR clues.",
+        "NFCReaderUsageDescription": "TreasureNet uses NFC to read NFC clues."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0F172A"
+      },
+      "package": "com.treasurenet.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "CAMERA",
+        "NFC"
+      ]
+    },
+    "plugins": [
+      "expo-location",
+      "expo-camera",
+      "expo-sensors"
+    ]
+  }
+}

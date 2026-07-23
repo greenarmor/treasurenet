@@ -1,0 +1,374 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  GAME_MASTER
+  PLAYER
+  AUDITOR
+}
+
+enum WalletType {
+  FREIGHTER
+  MOBILE
+}
+
+enum SbtStatus {
+  NONE
+  PENDING
+  ISSUED
+  REVOKED
+}
+
+enum HuntStatus {
+  DRAFT
+  FUNDED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  EXPIRED
+  REFUNDED
+  CANCELLED
+}
+
+enum HuntDifficulty {
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+  LEGENDARY
+}
+
+enum HuntVisibility {
+  PUBLIC
+  UNLISTED
+  INVITE_ONLY
+}
+
+enum RewardToken {
+  XLM
+  USDC
+  CUSTOM
+}
+
+enum ClueType {
+  TEXT
+  IMAGE
+  AUDIO
+  QR
+  NFC
+  PUZZLE
+  AR
+}
+
+enum UnlockType {
+  GEO_FENCE
+  TIME_LOCK
+  SEQUENTIAL
+  RANDOM
+  PUZZLE
+}
+
+enum AttemptStatus {
+  ACTIVE
+  COMPLETED
+  ABANDONED
+}
+
+enum BadgeType {
+  EXPLORER
+  FIRST_BLOOD
+  WALKER_100KM
+  TREASURE_HUNTER
+  PUZZLE_MASTER
+  SPEED_RUNNER
+  LEGEND
+  BLOCKCHAIN_PIONEER
+}
+
+enum GameEventType {
+  HUNT_CREATED
+  HUNT_FUNDED
+  HUNT_ACTIVATED
+  PLAYER_JOINED
+  CLUE_UNLOCKED
+  TREASURE_CLAIMED
+  HUNT_EXPIRED
+  REFUND_ISSUED
+  LEADERBOARD_UPDATED
+  SBT_ISSUED
+  SBT_REVOKED
+}
+
+// ─── Users & Wallets ─────────────────────────────────────────
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  email     String?  @unique
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wallets  Wallet[]
+  sessions Session[]
+
+  @@map("users")
+}
+
+model Wallet {
+  id            String     @id @default(uuid())
+  address       String     @unique
+  userId        String
+  roles         UserRole[]
+  walletType    WalletType @default(FREIGHTER)
+  sbtTokenId    String?
+  sbtContractId String?
+  sbtStatus     SbtStatus  @default(NONE)
+  isPrimary     Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  user           User              @relation(fields: [userId], references: [id])
+  ownedHunts     TreasureHunt[]
+  attempts       HuntAttempt[]
+  progress       PlayerProgress?
+  events         GameEvent[]
+  wonHunts       TreasureHunt[]    @relation("Winner")
+
+  @@index([userId])
+  @@map("wallets")
+}
+
+// ─── Treasure Hunts ──────────────────────────────────────────
+
+model TreasureHunt {
+  id               String         @id @default(uuid())
+  ownerWalletId    String
+  escrowContractId String         @unique
+  title            String
+  description      String
+  reward           String
+  rewardToken      RewardToken    @default(XLM)
+  customTokenAddr  String?
+  status           HuntStatus     @default(DRAFT)
+  difficulty       HuntDifficulty @default(MEDIUM)
+  visibility       HuntVisibility @default(PUBLIC)
+  treasureLat      Float
+  treasureLng      Float
+  treasureRadius   Int
+  clueCount        Int
+  expirationHours  Int
+  maxPlayers       Int?
+  imageUrls        String[]
+  tags             String[]
+  createdAt        DateTime       @default(now())
+  activatedAt      DateTime?
+  claimedAt        DateTime?
+  expiresAt        DateTime?
+  winnerWalletId   String?
+
+  owner    Wallet        @relation(fields: [ownerWalletId], references: [id])
+  winner   Wallet?       @relation("Winner", fields: [winnerWalletId], references: [id])
+  clues    Clue[]
+  attempts HuntAttempt[]
+  events   GameEvent[]
+
+  @@index([ownerWalletId])
+  @@index([status])
+  @@index([treasureLat, treasureLng])
+  @@index([visibility, status])
+  @@map("treasure_hunts")
+}
+
+// ─── Clues ───────────────────────────────────────────────────
+
+model Clue {
+  id            String     @id @default(uuid())
+  huntId        String
+  sequence      Int
+  lat           Float
+  lng           Float
+  unlockRadius  Int
+  hintText      String
+  hintImageUrl  String?
+  hintAudioUrl  String?
+  qrCodeData    String?
+  nfcTagId      String?
+  puzzleData    Json?
+  clueType      ClueType   @default(TEXT)
+  unlockType    UnlockType @default(GEO_FENCE)
+  unlockTime    DateTime?
+  isFinal       Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+
+  hunt              TreasureHunt     @relation(fields: [huntId], references: [id])
+  unlockedByPlayers UnlockedClue[]
+
+  @@unique([huntId, sequence])
+  @@index([huntId])
+  @@map("clues")
+}
+
+// ─── Hunt Attempts ───────────────────────────────────────────
+
+model HuntAttempt {
+  id              String        @id @default(uuid())
+  huntId          String
+  playerWalletId  String
+  status          AttemptStatus @default(ACTIVE)
+  cluesUnlocked    Int          @default(0)
+  distanceTraveled Float       @default(0)
+  startedAt       DateTime      @default(now())
+  completedAt     DateTime?
+
+  hunt            TreasureHunt   @relation(fields: [huntId], references: [id])
+  player          Wallet         @relation(fields: [playerWalletId], references: [id])
+  unlockedClues   UnlockedClue[]
+
+  @@unique([huntId, playerWalletId])
+  @@index([playerWalletId])
+  @@map("hunt_attempts")
+}
+
+// ─── Unlocked Clues ──────────────────────────────────────────
+
+model UnlockedClue {
+  id        String   @id @default(uuid())
+  attemptId String
+  clueId    String
+  lat       Float
+  lng       Float
+  unlockedAt DateTime @default(now())
+
+  attempt   HuntAttempt @relation(fields: [attemptId], references: [id])
+  clue      Clue        @relation(fields: [clueId], references: [id])
+
+  @@unique([attemptId, clueId])
+  @@map("unlocked_clues")
+}
+
+// ─── Player Progression ──────────────────────────────────────
+
+model PlayerProgress {
+  id                  String   @id @default(uuid())
+  walletId            String   @unique
+  xp                  Int      @default(0)
+  level               Int      @default(1)
+  completedHunts      Int      @default(0)
+  winCount            Int      @default(0)
+  lossCount           Int      @default(0)
+  distanceWalked      Float    @default(0)
+  totalRewardsEarned  String   @default("0")
+  leaderboardScore    Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  wallet Wallet          @relation(fields: [walletId], references: [id])
+  badges PlayerBadge[]
+
+  @@index([leaderboardScore])
+  @@index([xp])
+  @@map("player_progress")
+}
+
+// ─── Badges ──────────────────────────────────────────────────
+
+model PlayerBadge {
+  id         String    @id @default(uuid())
+  progressId String
+  badge      BadgeType
+  earnedAt   DateTime  @default(now())
+
+  progress PlayerProgress @relation(fields: [progressId], references: [id])
+
+  @@unique([progressId, badge])
+  @@map("player_badges")
+}
+
+// ─── Game Events ─────────────────────────────────────────────
+
+model GameEvent {
+  id        String        @id @default(uuid())
+  type      GameEventType
+  huntId    String?
+  walletId  String?
+  data      Json          @default("{}")
+  createdAt DateTime      @default(now())
+
+  hunt  TreasureHunt? @relation(fields: [huntId], references: [id])
+  wallet Wallet?      @relation(fields: [walletId], references: [id])
+
+  @@index([type])
+  @@index([huntId])
+  @@index([createdAt])
+  @@map("game_events")
+}
+
+// ─── Sessions ────────────────────────────────────────────────
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  token        String   @unique
+  refreshToken String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([token])
+  @@map("sessions")
+}
+
+// ─── Leaderboard ─────────────────────────────────────────────
+
+model Leaderboard {
+  id       String   @id @default(uuid())
+  walletId String   @unique
+  score    Int
+  rank     Int
+  week     Int
+  year     Int
+  updatedAt DateTime @updatedAt
+
+  @@index([score])
+  @@index([week, year])
+  @@map("leaderboard")
+}
+
+// ─── Notifications ───────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(uuid())
+  walletId  String
+  title     String
+  body      String
+  data      Json     @default("{}")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([walletId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ─── Nonces (anti-replay) ────────────────────────────────────
+
+model Nonce {
+  id        String   @id @default(uuid())
+  value     String   @unique
+  walletId  String?
+  usedAt    DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([value])
+  @@index([expiresAt])
+  @@map("nonces")
+}

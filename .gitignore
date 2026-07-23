@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+dist/
+target/
+*.tsbuildinfo
+.expo/
+
+# Environment (local only)
+.env
+.env.local
+
+# OS
+.DS_Store
+
+# Local-only knowledge base (never push)
+.dev-logs/
+
+# AI artifacts (serve locally only, never push)
+.ai/
+.aider*
+.cursor/
+.claude/
+.crush/
+*.ai.md
+*.agents.md

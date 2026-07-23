@@ -1,0 +1,34 @@
+{
+  "name": "treasurenet",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A blockchain-backed real-world geolocation treasure hunting game powered by Stellar",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "typecheck": "turbo run typecheck",
+    "db:migrate": "turbo run db:migrate",
+    "db:seed": "turbo run db:seed",
+    "contracts:build": "cd contracts && make build",
+    "contracts:test": "cd contracts && make test",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@prisma/client": "^5.22.0",
+    "prettier": "^3.2.0",
+    "prisma": "^5.22.0",
+    "turbo": "^1.13.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
