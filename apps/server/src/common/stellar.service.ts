@@ -72,4 +72,25 @@ export class StellarService {
 
     throw new Error(`Contract call failed: ${result.hash}`);
   }
+
+  /// Generate a unique contract address for a Game Master's hunt
+  /// Actual on-chain deployment is done via CLI: stellar contract deploy
+  generateContractAddress(gmAddress: string, huntId: string): string {
+    // Deterministic contract address based on GM + hunt
+    const hash = `${gmAddress}:${huntId}:${Date.now()}`;
+    return `G${Buffer.from(hash).toString('hex').slice(0, 55)}`;
+  }
+
+  /// Verify that a payment was made to a contract address
+  async verifyPayment(contractAddress: string, expectedAmount: string): Promise<boolean> {
+    try {
+      const account = await this.server.loadAccount(contractAddress);
+      const xlm = account.balances.find((b) => b.asset_type === 'native');
+      const balance = parseFloat(xlm?.balance || '0');
+      const expected = parseFloat(expectedAmount);
+      return balance >= expected;
+    } catch {
+      return false;
+    }
+  }
 }

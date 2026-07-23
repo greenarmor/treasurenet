@@ -9,6 +9,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { GeoService } from '../geo/geo.service';
 import { EscrowService } from '../escrow/escrow.service';
+import { StellarService } from '../common/stellar.service';
 import type {
   CreateHuntRequest,
   NearbyHuntRequest,
@@ -26,6 +27,7 @@ export class GameService {
     private readonly prisma: PrismaClient,
     private readonly geoService: GeoService,
     private readonly escrowService: EscrowService,
+    private readonly stellar: StellarService,
     @InjectQueue('hunt-events') private readonly eventQueue: Queue,
   ) {}
 
@@ -41,10 +43,21 @@ export class GameService {
       throw new ForbiddenException('Only Game Masters can create hunts');
     }
 
+    // Generate a unique contract address for this GM's hunt
+    const contractAddress = this.stellar.generateContractAddress(
+      wallet.address,
+      Date.now().toString(),
+    );
+
     const { escrowContractId } = await this.escrowService.createEscrow(
       dto.reward,
       dto.rewardToken,
     );
+
+    await this.prisma.escrowContract.update({
+      where: { id: escrowContractId },
+      data: { contractAddress },
+    });
 
     const hunt = await this.prisma.treasureHunt.create({
       data: {
