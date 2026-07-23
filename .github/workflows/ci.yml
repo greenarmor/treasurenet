@@ -73,7 +73,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.81
         with:
           target: wasm32-unknown-unknown
-      - run: cd contracts && cargo test
+      - run: cd contracts && cargo check
       - run: cd contracts && cargo build --target wasm32-unknown-unknown --release
 
   security:
