@@ -12,7 +12,7 @@ edition = "2021"
 rust-version = "1.75"
 
 [workspace.dependencies]
-soroban-sdk = "21.0.0"
+soroban-sdk = "22.0.11"
 soroban-token-sdk = "21.0.0"
 
 [profile.release]
