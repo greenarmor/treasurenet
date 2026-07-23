@@ -12,8 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v2
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -51,8 +49,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v2
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -72,17 +68,15 @@ jobs:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@1.91
         with:
-          target: wasm32-unknown-unknown
+          target: wasm32v1-none
       - run: cd contracts && cargo check
-      - run: cd contracts && cargo build --target wasm32-unknown-unknown --release
+      - run: cd contracts && cargo build --target wasm32v1-none --release
 
   security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v2
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 22
