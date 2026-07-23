@@ -7,8 +7,8 @@ const nextConfig = {
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      // Stellar SDK uses sodium-native (Node.js native module)
-      // Replace with empty modules in browser context
+      // Force browser resolution for Stellar SDK
+      config.resolve.conditionNames = ['browser', 'import', 'module', 'require'];
       config.resolve.fallback = {
         ...config.resolve.fallback,
         'sodium-native': false,
