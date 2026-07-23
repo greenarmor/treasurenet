@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useStellarWallet } from '@/hooks/useStellarWallet';
+import { useWebAuth } from '@/hooks/useWebAuth';
 
 export default function WalletPage(): React.JSX.Element {
   const {
@@ -16,10 +17,45 @@ export default function WalletPage(): React.JSX.Element {
     connect,
     disconnect,
     sendTestTransaction,
+    fetchBalance,
   } = useStellarWallet();
+  const { login, promoteToGM, getNonce, token } = useWebAuth();
 
   const [destination, setDestination] = useState('');
   const [amount, setAmount] = useState('');
+  const [isGM, setIsGM] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+
+  const handleConnect = useCallback(async () => {
+    setAuthLoading(true);
+    await connect();
+    await fetchBalance();
+    // Auto-authenticate with server
+    setTimeout(async () => {
+      try {
+        const provider = (window as any).stellar;
+        if (provider) {
+          const pk = await provider.getPublicKey();
+          const { message } = await getNonce(pk);
+          const signature = await provider.signMessage(message, { publicKey: pk });
+          await login(pk, signature, message);
+        }
+      } catch (err) {
+        console.error('Server auth failed:', err);
+      }
+      setAuthLoading(false);
+    }, 500);
+  }, [connect, fetchBalance, getNonce, login]);
+
+  const handlePromoteToGM = async () => {
+    if (!publicKey) return;
+    try {
+      await promoteToGM(publicKey);
+      setIsGM(true);
+    } catch (err: any) {
+      alert(err.message || 'Failed to promote');
+    }
+  };
 
   const handleSend = async () => {
     if (!destination || !amount) return;
@@ -50,10 +86,10 @@ export default function WalletPage(): React.JSX.Element {
             </p>
             <button
               className="btn-primary w-full"
-              onClick={connect}
-              disabled={connecting}
+              onClick={handleConnect}
+              disabled={connecting || authLoading}
             >
-              {connecting ? 'Connecting...' : 'Connect Freighter Wallet'}
+              {connecting || authLoading ? 'Connecting...' : 'Connect Freighter Wallet'}
             </button>
             <p className="text-treasure-muted text-xs mt-3 text-center">
               Don&apos;t have Freighter?{' '}
@@ -86,6 +122,34 @@ export default function WalletPage(): React.JSX.Element {
             <div className="bg-treasure-bg rounded-xl p-4 mb-4">
               <p className="text-treasure-muted text-xs mb-1">Wallet Address</p>
               <p className="font-mono text-sm break-all text-treasure-text">{publicKey}</p>
+            </div>
+
+            {/* Roles */}
+            <div className="bg-treasure-bg rounded-xl p-4 mb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-treasure-muted text-xs mb-1">Role</p>
+                  <div className="flex items-center gap-2">
+                    {isGM || token ? (
+                      <>
+                        <span className="text-xs bg-gold-500/20 text-gold-500 px-2 py-0.5 rounded-full">
+                          {isGM ? 'Game Master' : 'Connected'}
+                        </span>
+                        {!isGM && (
+                          <button
+                            className="text-xs text-gold-500 underline"
+                            onClick={handlePromoteToGM}
+                          >
+                            Upgrade to Game Master
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-treasure-muted text-xs">Authenticating...</span>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Balance */}

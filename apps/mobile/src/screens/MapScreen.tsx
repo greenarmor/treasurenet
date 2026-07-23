@@ -1,81 +1,135 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import * as Location from 'expo-location';
+import { api } from '../lib/api';
+
+interface Hunt {
+  id: string;
+  title: string;
+  description?: string;
+  difficulty: string;
+  clueCount: number;
+  reward: string;
+  status: string;
+  distance?: number;
+}
 
 export function MapScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [hunts, setHunts] = useState<any[]>([]);
+  const [hunts, setHunts] = useState<Hunt[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') return;
+      if (status !== 'granted') {
+        setError('Location permission required to find nearby hunts');
+        setLoading(false);
+        return;
+      }
 
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-      setLocation(loc);
+      try {
+        const loc = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
+        setLocation(loc);
+      } catch {
+        setError('Failed to get location. Please enable GPS.');
+      }
     })();
   }, []);
 
   useEffect(() => {
     if (!location) return;
-    const fetchNearby = async () => {
-      try {
-        const res = await fetch(
-          `http://localhost:4000/api/v1/hunts?latitude=${location.coords.latitude}&longitude=${location.coords.longitude}&radiusKm=10`,
-        );
-        const data = await res.json();
-        setHunts(Array.isArray(data) ? data : data.data || []);
-      } catch {
-        setHunts([]);
-      }
-    };
-    fetchNearby();
-    const interval = setInterval(fetchNearby, 30000);
-    return () => clearInterval(interval);
+    fetchNearbyHunts();
   }, [location]);
+
+  const fetchNearbyHunts = async () => {
+    if (!location) return;
+    setLoading(true);
+    try {
+      const data = await api.get<Hunt[]>('/hunts');
+      setHunts(data || []);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch hunts');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDistance = (meters?: number) => {
+    if (meters === undefined) return '---';
+    if (meters < 1000) return `${Math.round(meters)}m`;
+    return `${(meters / 1000).toFixed(1)} km`;
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>TreasureNet</Text>
-        <Text style={styles.subtitle}>GPS Active • Nearby Hunts</Text>
+        <Text style={styles.subtitle}>
+          {location ? 'GPS Active - Nearby Hunts' : 'Acquiring GPS...'}
+        </Text>
       </View>
 
-      <FlatList
-        data={hunts}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={
-          <Text style={styles.empty}>No hunts nearby. Create one!</Text>
-        }
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.huntCard}>
-            <View style={styles.huntInfo}>
-              <Text style={styles.huntTitle}>{item.title}</Text>
-              <Text style={styles.huntMeta}>
-                {item.difficulty} • {item.clueCount} clues
-              </Text>
-            </View>
-            <View style={styles.huntReward}>
-              <Text style={styles.rewardText}>{item.reward} XLM</Text>
-              <Text style={styles.distanceText}>
-                {item.distance
-                  ? `${(item.distance / 1000).toFixed(1)} km`
-                  : '---'}
-              </Text>
-            </View>
+      {loading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#F59E0B" />
+          <Text style={styles.loadingText}>Scanning for nearby treasures...</Text>
+        </View>
+      ) : error ? (
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchNearbyHunts}>
+            <Text style={styles.retryText}>Retry</Text>
           </TouchableOpacity>
-        )}
-      />
+        </View>
+      ) : (
+        <FlatList
+          data={hunts}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <Text style={styles.empty}>No hunts nearby. Check back soon!</Text>
+          }
+          renderItem={({ item }) => (
+            <TouchableOpacity style={styles.huntCard}>
+              <View style={styles.huntInfo}>
+                <Text style={styles.huntTitle}>{item.title}</Text>
+                <Text style={styles.huntMeta}>
+                  {item.difficulty} - {item.clueCount} clues
+                  {item.description ? `\n${item.description}` : ''}
+                </Text>
+              </View>
+              <View style={styles.huntReward}>
+                <Text style={styles.rewardText}>{item.reward} XLM</Text>
+                <Text style={styles.distanceText}>{formatDistance(item.distance)}</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0F172A' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   header: { padding: 20, paddingTop: 60 },
   title: { fontSize: 28, fontWeight: 'bold', color: '#F59E0B' },
   subtitle: { color: '#94A3B8', marginTop: 4, fontSize: 14 },
+  loadingText: { color: '#94A3B8', marginTop: 12 },
+  errorText: { color: '#EF4444', fontSize: 14, textAlign: 'center', marginBottom: 12 },
+  retryButton: {
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryText: { color: '#0F172A', fontWeight: '600' },
   list: { padding: 16 },
   empty: { color: '#94A3B8', textAlign: 'center', marginTop: 40, fontSize: 16 },
   huntCard: {
