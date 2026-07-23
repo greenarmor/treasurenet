@@ -153,7 +153,9 @@ export class GameService {
     if (wallet.walletType !== 'MOBILE') {
       throw new ForbiddenException('Players must use the mobile app to join hunts');
     }
-    if (wallet.sbtStatus !== 'ISSUED') {
+    // Verify SBT on-chain or via DB status
+    const hasSbt = wallet.sbtStatus === 'ISSUED' || wallet.sbtTokenId != null;
+    if (!hasSbt) {
       throw new ForbiddenException('Soulbound Token required to participate');
     }
 
