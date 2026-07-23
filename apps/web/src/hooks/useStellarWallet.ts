@@ -30,33 +30,17 @@ export function useStellarWallet() {
   const connect = useCallback(async () => {
     setWallet((prev) => ({ ...prev, connecting: true }));
     try {
-      // Step 1: Check if Freighter is already connected
-      const { isConnected: alreadyConnected } = await freighterApi.isConnected();
+      // requestAccess handles both connection and returns the public key
+      const { address, error } = await freighterApi.requestAccess();
 
-      if (!alreadyConnected) {
-        // Step 2: Request the user to connect via Freighter popup
-        const { error: reqError } = await freighterApi.requestAccess();
-        if (reqError) {
-          alert(
-            `Freighter connection failed: ${reqError.message || reqError}\n\n` +
-            'Please open the Freighter extension and try again.',
-          );
-          setWallet((prev) => ({ ...prev, connecting: false }));
-          return;
-        }
-      }
-
-      // Step 3: Get the wallet address
-      const { address, error: addrError } = await freighterApi.getAddress();
-
-      if (addrError || !address) {
+      if (error || !address) {
         alert(
-          'Freighter is installed but no wallet account found.\n\n' +
-          'Open the Freighter extension and:\n' +
-          '1. Click "Create Wallet" or "Import Wallet"\n' +
-          '2. Save your recovery phrase\n' +
-          '3. Switch to Testnet network\n' +
-          '4. Come back and click Connect again',
+          'Freighter connection failed.\n\n' +
+          `Error: ${error?.message || error || 'No account found'}\n\n` +
+          'Make sure:\n' +
+          '- Freighter extension is unlocked\n' +
+          '- You have created or imported a wallet account\n' +
+          '- Freighter is set to Testnet network',
         );
         setWallet((prev) => ({ ...prev, connecting: false }));
         return;
