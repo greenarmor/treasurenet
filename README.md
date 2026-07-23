@@ -16,24 +16,28 @@ Connect your Freighter wallet, view your testnet balance, and send XLM transacti
 ## Screenshots
 
 ### Wallet Connected State
+
 ![Wallet Connected](docs/screenshots/wallet-connected.png)
 
-*Freighter wallet connected with green indicator.*
+_Freighter wallet connected with green indicator._
 
 ### Balance Displayed
+
 ![Balance Display](docs/screenshots/balance.png)
 
-*Live testnet XLM balance fetched from Horizon API.*
+_Live testnet XLM balance fetched from Horizon API._
 
 ### Successful Testnet Transaction
-![Transaction Success](docs/screenshots/transaction-success.png)
 
-*Transaction submitted successfully with hash and explorer link.*
+![Transaction Success](docs/screenshots/trasnsaction-success.png)
+
+_Transaction submitted successfully with hash and explorer link._
 
 ### Transaction Result
+
 ![Transaction Result](docs/screenshots/transaction-result.png)
 
-*Transaction hash, status, and link to Stellar Expert explorer.*
+_Transaction hash, status, and link to Stellar Expert explorer._
 
 ## Setup Instructions
 
@@ -52,14 +56,14 @@ pnpm install
 pnpm dev
 ```
 
-Open http://localhost:3000/wallet
+Open <http://localhost:3000/wallet>
 
 ### Test the Wallet
 
-1. Open http://localhost:3000/wallet
+1. Open <http://localhost:3000/wallet>
 2. Click "Connect Freighter Wallet"
 3. Ensure Freighter is set to **Testnet**
-4. Fund your wallet at https://laboratory.stellar.org/#account-creator
+4. Fund your wallet at <https://laboratory.stellar.org/#account-creator>
 5. Your balance will appear
 6. Send a test transaction to any testnet address
 7. View the result and explorer link
