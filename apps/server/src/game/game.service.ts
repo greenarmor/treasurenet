@@ -98,9 +98,16 @@ export class GameService {
       include: { clues: { orderBy: { sequence: 'asc' } } },
     });
 
-    await this.emitEvent('HUNT_CREATED', hunt.id, walletId, { huntId: hunt.id });
+    await this.emitEvent('HUNT_CREATED', hunt.id, walletId, {
+      huntId: hunt.id,
+      contractAddress,
+    });
 
-    return this.formatHunt(hunt);
+    return {
+      ...this.formatHunt(hunt),
+      contractAddress,
+      fundingInstructions: `Send ${dto.reward} XLM to ${contractAddress} on Stellar testnet to fund this hunt.`,
+    };
   }
 
   // ─── Get Nearby Hunts ──────────────────────────────────────
@@ -385,9 +392,74 @@ export class GameService {
   async getCreatedHunts(walletId: string) {
     return this.prisma.treasureHunt.findMany({
       where: { ownerWalletId: walletId },
-      include: { clues: { orderBy: { sequence: 'asc' } } },
+      include: {
+        clues: { orderBy: { sequence: 'asc' } },
+        attempts: { select: { id: true, status: true, player: { select: { address: true } } } },
+      },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  /// GM dashboard with aggregate stats
+  async getGMDashboard(walletId: string) {
+    const [hunts, activeHunts, completedHunts, totalRewards, totalPlayers] =
+      await Promise.all([
+        this.prisma.treasureHunt.count({ where: { ownerWalletId: walletId } }),
+        this.prisma.treasureHunt.count({
+          where: { ownerWalletId: walletId, status: 'ACTIVE' },
+        }),
+        this.prisma.treasureHunt.count({
+          where: { ownerWalletId: walletId, status: 'COMPLETED' },
+        }),
+        this.prisma.treasureHunt.aggregate({
+          where: { ownerWalletId: walletId, status: { in: ['COMPLETED', 'ACTIVE'] } },
+          _count: { id: true },
+        }),
+        this.prisma.huntAttempt.count({
+          where: { hunt: { ownerWalletId: walletId } },
+        }),
+      ]);
+
+    // Get contract funding status for active hunts
+    const activeHuntsList = await this.prisma.treasureHunt.findMany({
+      where: { ownerWalletId: walletId, status: 'DRAFT' },
+      select: { id: true, title: true, escrowContractId: true, reward: true },
+    });
+
+    const contractsWithFunding = await Promise.all(
+      activeHuntsList.map(async (hunt) => {
+        const escrow = await this.prisma.escrowContract.findUnique({
+          where: { id: hunt.escrowContractId },
+          select: { contractAddress: true, status: true },
+        });
+        let funded = false;
+        if (escrow?.contractAddress) {
+          try {
+            funded = await this.stellar.verifyPayment(
+              escrow.contractAddress,
+              hunt.reward,
+            );
+          } catch {
+            funded = false;
+          }
+        }
+        return {
+          huntId: hunt.id,
+          title: hunt.title,
+          contractAddress: escrow?.contractAddress,
+          funded,
+          reward: hunt.reward,
+        };
+      }),
+    );
+
+    return {
+      totalHunts: hunts,
+      activeHunts,
+      completedHunts,
+      totalPlayers,
+      activeContracts: contractsWithFunding,
+    };
   }
 
   // ─── Helpers ───────────────────────────────────────────────

@@ -65,4 +65,10 @@ export class GameController {
   getMyHunts(@Req() req: any) {
     return this.gameService.getCreatedHunts(req.user.id);
   }
+
+  @Get('gm-dashboard')
+  @ApiOperation({ summary: 'Game Master dashboard with stats and funding status' })
+  getGMDashboard(@Req() req: any) {
+    return this.gameService.getGMDashboard(req.user.id);
+  }
 }
