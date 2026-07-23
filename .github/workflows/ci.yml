@@ -10,7 +10,7 @@ jobs:
   lint-and-typecheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v2
         with:
           version: 9
@@ -49,7 +49,7 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v2
         with:
           version: 9
@@ -69,8 +69,8 @@ jobs:
   contracts:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.85
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@1.91
         with:
           target: wasm32-unknown-unknown
       - run: cd contracts && cargo check
@@ -79,7 +79,7 @@ jobs:
   security:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v2
         with:
           version: 9
