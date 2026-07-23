@@ -13,6 +13,7 @@ rust-version = "1.91"
 
 [workspace.dependencies]
 soroban-sdk = "27.0.2"
+wee_alloc = "0.4.5"
 
 [profile.release]
 opt-level = "z"
