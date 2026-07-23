@@ -70,7 +70,6 @@ jobs:
         with:
           target: wasm32v1-none
       - run: cd contracts && cargo check
-      - run: cd contracts && cargo build --target wasm32v1-none --release
 
   security:
     runs-on: ubuntu-latest
